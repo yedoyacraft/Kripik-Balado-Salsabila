@@ -123,4 +123,66 @@
   /* 5. Tahun otomatis ------------------------------------------------------- */
   const year = document.getElementById('currentYear');
   if (year) year.textContent = new Date().getFullYear();
+
+  /* 6. Custom cursor -------------------------------------------------------- */
+  // Aktif hanya pada perangkat dengan pointer presisi (mouse/trackpad) dan
+  // ketika pengguna tidak meminta pengurangan gerakan.
+  const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+
+  if (hasFinePointer && !prefersReducedMotion) {
+    const dot = document.createElement('div');
+    dot.className = 'cursor-dot';
+    const ring = document.createElement('div');
+    ring.className = 'cursor-ring';
+    document.body.appendChild(ring);
+    document.body.appendChild(dot);
+    document.body.classList.add('has-custom-cursor');
+
+    // Posisi terkini pointer dan posisi ring yang mengejar (efek lag halus).
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let ringX = mouseX;
+    let ringY = mouseY;
+    let visible = false;
+
+    const interactiveSelector = 'a, button, input, textarea, select, label, .gallery-item, [role="button"], .product-card, .filter-btn';
+
+    document.addEventListener('mousemove', (event) => {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+
+      if (!visible) {
+        visible = true;
+        document.body.classList.add('cursor-active');
+      }
+
+      const el = event.target instanceof Element ? event.target : null;
+      const target = el ? el.closest(interactiveSelector) : null;
+      document.body.classList.toggle('cursor-hover', Boolean(target));
+    });
+
+    // Sembunyikan saat pointer meninggalkan jendela.
+    document.addEventListener('mouseleave', () => {
+      visible = false;
+      document.body.classList.remove('cursor-active');
+    });
+    document.addEventListener('mouseenter', () => {
+      visible = true;
+      document.body.classList.add('cursor-active');
+    });
+
+    // Umpan balik saat menekan.
+    document.addEventListener('mousedown', () => document.body.classList.add('cursor-down'));
+    document.addEventListener('mouseup', () => document.body.classList.remove('cursor-down'));
+
+    // Animasi ring mengejar posisi pointer.
+    const animateRing = () => {
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animateRing);
+    };
+    requestAnimationFrame(animateRing);
+  }
 })();

@@ -70,7 +70,7 @@
     },
     {
       id: 7,
-      name: 'Kripik Asin',
+      name: 'Kripik Tawar Asin',
       category: 'oleh-oleh',
       size: '250 gram',
       image: 'assets/images/produk/Asin.jpg',

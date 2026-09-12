@@ -243,12 +243,11 @@
     grid-column: span 2;
   }
 
-  .gallery-item img,
-  .gallery-large img {
+  .gallery-item {
     height: 250px;
   }
 
-  .gallery-large img {
+  .gallery-large {
     height: 330px;
   }
 
@@ -324,8 +323,8 @@
     grid-row: auto;
   }
 
-  .full-gallery-grid .gallery-item img,
-  .full-gallery-grid .gallery-large img {
+  .full-gallery-grid .gallery-item,
+  .full-gallery-grid .gallery-large {
     height: 350px;
   }
 
