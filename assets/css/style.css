@@ -116,11 +116,10 @@ h2 em {
   margin-bottom: 23px;
 }
 
-.eyebrow > span:first-child {
+.eyebrow > span {
   width: 30px;
   height: 1px;
   background: currentColor;
-  flex-shrink: 0;
 }
 
 .eyebrow.light {
