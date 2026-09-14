@@ -88,19 +88,41 @@
     }
   ];
 
+  /* Ambil terjemahan bila i18n tersedia; jika tidak, pakai teks bawaan (id). */
+  function t(key, fallback) {
+    if (window.KBSi18n && typeof window.KBSi18n.t === 'function') {
+      const value = window.KBSi18n.t(key);
+      if (value) return value;
+    }
+    return fallback;
+  }
+
+  // Nama, deskripsi, dan badge produk mengikuti bahasa aktif melalui kunci
+  // "product.<id>.<field>" yang didefinisikan di i18n.js.
+  function localizedProduct(product) {
+    return {
+      name: t('product.' + product.id + '.name', product.name),
+      description: t('product.' + product.id + '.desc', product.description),
+      badge: t('product.' + product.id + '.badge', product.badge)
+    };
+  }
+
   /* 2. Render kartu produk -------------------------------------------------- */
   function productCard(product) {
+    const l = localizedProduct(product);
+    const metaBrand = t('product.metaBrand', 'Khas Salsabila');
+    const quickView = t('product.quickView', 'Lihat detail');
     return `
       <article class="product-card reveal" data-category="${product.category}">
         <div class="product-image">
-          <img src="${product.image}" alt="${product.name}">
-          <span class="product-badge">${product.badge}</span>
-          <button class="quick-view" data-product-id="${product.id}" aria-label="Lihat detail ${product.name}">&#8599;</button>
+          <img src="${product.image}" alt="${l.name}">
+          <span class="product-badge">${l.badge}</span>
+          <button class="quick-view" data-product-id="${product.id}" aria-label="${quickView} ${l.name}">&#8599;</button>
         </div>
         <div class="product-info">
-          <div class="product-meta"><span>${product.size}</span><span>&bull;</span><span>Khas Salsabila</span></div>
-          <h3>${product.name}</h3>
-          <p>${product.description}</p>
+          <div class="product-meta"><span>${product.size}</span><span>&bull;</span><span>${metaBrand}</span></div>
+          <h3>${l.name}</h3>
+          <p>${l.description}</p>
           <div class="product-bottom">
             <strong>${product.price ? product.price : ''}</strong>
             
@@ -131,6 +153,15 @@
   const filterTabs = document.getElementById('filterTabs');
   const productCount = document.getElementById('productCount');
 
+  // Simpan filter aktif agar bisa dirender ulang saat bahasa berganti.
+  let activeFilter = 'all';
+
+  function currentList() {
+    return activeFilter === 'all'
+      ? products
+      : products.filter((product) => product.category === activeFilter);
+  }
+
   if (productGrid) {
     renderProducts(products, productGrid);
     if (productCount) productCount.textContent = products.length;
@@ -142,14 +173,20 @@
           filterTabs.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
           tab.classList.add('active');
 
-          const filter = tab.dataset.filter;
-          const filtered = filter === 'all' ? products : products.filter((product) => product.category === filter);
+          activeFilter = tab.dataset.filter;
+          const filtered = currentList();
           renderProducts(filtered, productGrid);
           if (productCount) productCount.textContent = filtered.length;
         });
       });
     }
   }
+
+  /* Render ulang produk ketika bahasa berganti (teks mengikuti bahasa baru). */
+  document.addEventListener('kbs:languagechange', () => {
+    if (featuredTarget) renderProducts(products.slice(0, 3), featuredTarget);
+    if (productGrid) renderProducts(currentList(), productGrid);
+  });
 
   /* 5. Modal detail produk -------------------------------------------------- */
   const modal = document.getElementById('productModal');
@@ -159,17 +196,21 @@
     const product = products.find((item) => item.id === id);
     if (!product || !modal || !modalContent) return;
 
+    const l = localizedProduct(product);
+    const metaBrand = t('product.metaBrand', 'Khas Salsabila');
+    const orderBtn = t('product.orderBtn', 'Pesan Produk <span>&#8599;</span>');
+    // Pesan WhatsApp memakai nama asli (Indonesia) agar konsisten untuk penjual.
     const waText = encodeURIComponent(`Halo Kripik Balado Salsabila, saya ingin memesan ${product.name}.`);
     modalContent.innerHTML = `
       <div class="modal-product">
-        <img src="${product.image}" alt="${product.name}">
+        <img src="${product.image}" alt="${l.name}">
         <div class="modal-product-copy">
-          <span class="product-badge">${product.badge}</span>
-          <div class="product-meta">${product.size} &bull; Khas Salsabila</div>
-          <h2>${product.name}</h2>
-          <p>${product.description}</p>
+          <span class="product-badge">${l.badge}</span>
+          <div class="product-meta">${product.size} &bull; ${metaBrand}</div>
+          <h2>${l.name}</h2>
+          <p>${l.description}</p>
           ${product.price ? `<strong class="modal-price">${product.price}</strong>` : ''}
-          <a class="btn btn-primary" href="https://wa.me/${WA_NUMBER}?text=${waText}" target="_blank" rel="noopener noreferrer">Pesan Produk <span>&#8599;</span></a>
+          <a class="btn btn-primary" href="https://wa.me/${WA_NUMBER}?text=${waText}" target="_blank" rel="noopener noreferrer">${orderBtn}</a>
         </div>
       </div>`;
 

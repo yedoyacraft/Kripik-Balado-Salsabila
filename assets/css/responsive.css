@@ -125,6 +125,11 @@
     margin-top: 15px;
   }
 
+  .main-nav .lang-switch {
+    align-self: center;
+    margin-top: 15px;
+  }
+
   .hero {
     padding-top: 65px;
   }

@@ -1601,3 +1601,43 @@ body.cursor-down .cursor-dot {
   width: 12px;
   height: 12px;
 }
+
+/* 19. Pengalih bahasa (ID / EN) --------------------------------------------- */
+/* Tombol tambahan yang menyatu dengan gaya navigasi tanpa mengubah elemen lain. */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+}
+
+.lang-switch .lang-option {
+  border: 0;
+  background: transparent;
+  color: #57514b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.lang-switch .lang-option:hover {
+  color: var(--red);
+}
+
+.lang-switch .lang-option.active {
+  background: var(--red);
+  color: #fff;
+}
+
+.lang-switch .lang-option.active:hover {
+  color: #fff;
+}
