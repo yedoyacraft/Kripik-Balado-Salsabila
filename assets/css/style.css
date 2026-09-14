@@ -116,10 +116,13 @@ h2 em {
   margin-bottom: 23px;
 }
 
-.eyebrow > span {
+/* Hanya span pertama (garis dekoratif) yang dijadikan garis.
+   Span teks (mis. terjemahan data-i18n) tidak boleh ikut dipaksa lebar 30px. */
+.eyebrow > span:first-child {
   width: 30px;
   height: 1px;
   background: currentColor;
+  flex-shrink: 0;
 }
 
 .eyebrow.light {

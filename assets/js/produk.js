@@ -13,6 +13,8 @@
   const WA_NUMBER = '6282172111127';
 
   /* 1. Data produk --------------------------------------------------------- */
+  // Data produk. Teks (name/description/badge) diambil dari kamus i18n bila
+  // tersedia agar mengikuti bahasa aktif; nilai di sini menjadi fallback (ID).
   const products = [
     {
       id: 1,
@@ -88,19 +90,42 @@
     }
   ];
 
+  // Ambil teks produk sesuai bahasa aktif (fallback ke nilai default di atas).
+  function pText(product, field) {
+    if (window.KBS_I18N && typeof window.KBS_I18N.product === 'function') {
+      var value = window.KBS_I18N.product(product.id, field);
+      if (value) return value;
+    }
+    return product[field] != null ? product[field] : '';
+  }
+
+  // Teks UI yang bergantung bahasa (fallback ke Indonesia).
+  function uiText(key, fallback) {
+    if (window.KBS_I18N && typeof window.KBS_I18N.t === 'function') {
+      var value = window.KBS_I18N.t(key);
+      if (value != null) return value;
+    }
+    return fallback;
+  }
+
   /* 2. Render kartu produk -------------------------------------------------- */
   function productCard(product) {
+    var name = pText(product, 'name');
+    var badge = pText(product, 'badge');
+    var description = pText(product, 'description');
+    var origin = uiText('produk.card.origin', 'Khas Salsabila');
+    var viewAria = uiText('produk.quickview_aria', 'Lihat detail');
     return `
       <article class="product-card reveal" data-category="${product.category}">
         <div class="product-image">
-          <img src="${product.image}" alt="${product.name}">
-          <span class="product-badge">${product.badge}</span>
-          <button class="quick-view" data-product-id="${product.id}" aria-label="Lihat detail ${product.name}">&#8599;</button>
+          <img src="${product.image}" alt="${name}">
+          <span class="product-badge">${badge}</span>
+          <button class="quick-view" data-product-id="${product.id}" aria-label="${viewAria} ${name}">&#8599;</button>
         </div>
         <div class="product-info">
-          <div class="product-meta"><span>${product.size}</span><span>&bull;</span><span>Khas Salsabila</span></div>
-          <h3>${product.name}</h3>
-          <p>${product.description}</p>
+          <div class="product-meta"><span>${product.size}</span><span>&bull;</span><span>${origin}</span></div>
+          <h3>${name}</h3>
+          <p>${description}</p>
           <div class="product-bottom">
             <strong>${product.price ? product.price : ''}</strong>
             
@@ -131,6 +156,15 @@
   const filterTabs = document.getElementById('filterTabs');
   const productCount = document.getElementById('productCount');
 
+  // Filter yang sedang aktif pada halaman katalog (untuk render ulang).
+  let activeFilter = 'all';
+
+  function currentList() {
+    return activeFilter === 'all'
+      ? products
+      : products.filter((product) => product.category === activeFilter);
+  }
+
   if (productGrid) {
     renderProducts(products, productGrid);
     if (productCount) productCount.textContent = products.length;
@@ -142,8 +176,8 @@
           filterTabs.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
           tab.classList.add('active');
 
-          const filter = tab.dataset.filter;
-          const filtered = filter === 'all' ? products : products.filter((product) => product.category === filter);
+          activeFilter = tab.dataset.filter;
+          const filtered = currentList();
           renderProducts(filtered, productGrid);
           if (productCount) productCount.textContent = filtered.length;
         });
@@ -151,25 +185,42 @@
     }
   }
 
+  /* Render ulang konten dinamis saat bahasa berganti ----------------------- */
+  document.addEventListener('kbs:languagechange', () => {
+    if (featuredTarget) renderProducts(products.slice(0, 3), featuredTarget);
+    if (productGrid) renderProducts(currentList(), productGrid);
+    // Perbarui modal bila sedang terbuka.
+    if (modal && modal.classList.contains('open') && lastModalId != null) {
+      openProductModal(lastModalId);
+    }
+  });
+
   /* 5. Modal detail produk -------------------------------------------------- */
   const modal = document.getElementById('productModal');
   const modalContent = document.getElementById('modalContent');
+  let lastModalId = null;
 
   function openProductModal(id) {
     const product = products.find((item) => item.id === id);
     if (!product || !modal || !modalContent) return;
 
-    const waText = encodeURIComponent(`Halo Kripik Balado Salsabila, saya ingin memesan ${product.name}.`);
+    lastModalId = id;
+    const name = pText(product, 'name');
+    const badge = pText(product, 'badge');
+    const description = pText(product, 'description');
+    const origin = uiText('produk.card.origin', 'Khas Salsabila');
+    const orderLabel = uiText('produk.modal.order', 'Pesan Produk');
+    const waText = encodeURIComponent(`Halo Kripik Balado Salsabila, saya ingin memesan ${name}.`);
     modalContent.innerHTML = `
       <div class="modal-product">
-        <img src="${product.image}" alt="${product.name}">
+        <img src="${product.image}" alt="${name}">
         <div class="modal-product-copy">
-          <span class="product-badge">${product.badge}</span>
-          <div class="product-meta">${product.size} &bull; Khas Salsabila</div>
-          <h2>${product.name}</h2>
-          <p>${product.description}</p>
+          <span class="product-badge">${badge}</span>
+          <div class="product-meta">${product.size} &bull; ${origin}</div>
+          <h2>${name}</h2>
+          <p>${description}</p>
           ${product.price ? `<strong class="modal-price">${product.price}</strong>` : ''}
-          <a class="btn btn-primary" href="https://wa.me/${WA_NUMBER}?text=${waText}" target="_blank" rel="noopener noreferrer">Pesan Produk <span>&#8599;</span></a>
+          <a class="btn btn-primary" href="https://wa.me/${WA_NUMBER}?text=${waText}" target="_blank" rel="noopener noreferrer">${orderLabel} <span>&#8599;</span></a>
         </div>
       </div>`;
 
@@ -183,6 +234,7 @@
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
+    lastModalId = null;
   }
 
   document.querySelectorAll('[data-close-modal]').forEach((element) => {

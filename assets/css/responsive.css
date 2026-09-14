@@ -363,3 +363,11 @@
     transform: none;
   }
 }
+
+/* Language switcher pada tampilan mobile (menu kolom) ----------------------- */
+@media (max-width: 760px) {
+  .main-nav .lang-switch {
+    align-self: flex-start;
+    margin-top: 15px;
+  }
+}
